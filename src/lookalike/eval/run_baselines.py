@@ -80,6 +80,11 @@ def paired_table(
     return pd.DataFrame(rows)
 
 
+def mlflow_name(metric: str) -> str:
+    """MLflow metric names cannot contain '@': 'ndcg@10' is logged as 'ndcg_at_10'."""
+    return metric.replace("@", "_at_")
+
+
 def log_to_mlflow(
     summary: pd.DataFrame, model: str, split: str, meta: dict, cfg: dict
 ) -> str | None:
@@ -103,9 +108,10 @@ def log_to_mlflow(
             }
         )
         for row in summary.itertuples():
-            mlflow.log_metric(row.metric, row.mean)
-            mlflow.log_metric(f"{row.metric}_ci_low", row.ci_low)
-            mlflow.log_metric(f"{row.metric}_ci_high", row.ci_high)
+            name = mlflow_name(row.metric)
+            mlflow.log_metric(name, row.mean)
+            mlflow.log_metric(f"{name}_ci_low", row.ci_low)
+            mlflow.log_metric(f"{name}_ci_high", row.ci_high)
         return run.info.run_id
 
 

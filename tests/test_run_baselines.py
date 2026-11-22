@@ -99,9 +99,14 @@ def test_mlflow_logging_returns_a_run_id_and_stores_the_metric(tmp_path):
     summary = pd.DataFrame(
         {"metric": ["ndcg@10"], "mean": [0.5], "ci_low": [0.4], "ci_high": [0.6], "n_queries": [9]}
     )
-    cfg = {**CFG, "mlflow_tracking_uri": str(tmp_path / "mlruns"), "mlflow_experiment": "t"}
+    cfg = {
+        **CFG,
+        "mlflow_tracking_uri": f"sqlite:///{(tmp_path / 'mlflow.db').as_posix()}",
+        "mlflow_experiment": "t",
+    }
     run_id = log_to_mlflow(summary, "clip", "test", {"commit_hash": "abc"}, cfg)
     assert run_id
     run = mlflow.get_run(run_id)
-    assert run.data.metrics["ndcg@10"] == 0.5
+    assert run.data.metrics["ndcg_at_10"] == 0.5
+    assert run.data.metrics["ndcg_at_10_ci_low"] == 0.4
     assert run.data.params["commit_hash"] == "abc"

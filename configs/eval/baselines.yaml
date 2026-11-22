@@ -15,6 +15,7 @@ ndcg_k: 10
 map_k: 10
 relevance_threshold: 2 # grade >= 2 counts as "relevant" for hit/recall/MRR/AP (D10)
 
-# MLflow is optional (uv sync --group tracking). Runs go to a local folder.
-mlflow_tracking_uri: mlruns
+# MLflow is optional (uv sync --group tracking). Runs go to a local SQLite file (gitignored);
+# MLflow 3.x no longer accepts the plain-folder backend.
+mlflow_tracking_uri: sqlite:///mlflow.db
 mlflow_experiment: phase2_baselines
