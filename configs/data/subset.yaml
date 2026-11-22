@@ -1,0 +1,19 @@
+# Paths are for Kaggle; copy this file and edit them for another machine.
+raw_dir: /kaggle/input/h-and-m-personalized-fashion-recommendations
+images_dir: /kaggle/input/h-and-m-personalized-fashion-recommendations/images
+subset_path: data/processed/subset.parquet
+
+seed: 42
+cap_per_type: 1500 # TUNE after looking at the real type distribution (target ~20k items)
+min_per_type: 30 # types with fewer items cannot be split sensibly
+
+# Near-duplicate check (embeddings come from frozen CLIP, Phase 2 extraction)
+embeddings_path: data/processed/clip_frozen_embeddings.npy
+embedding_ids_path: data/processed/clip_frozen_ids.npy
+near_dup_threshold: 0.97
+near_dup_pairs_path: data/processed/near_dup_pairs.parquet
+
+# Splits (ids only, committed to the repo)
+holdout_type_frac: 0.2
+ratios: [0.7, 0.1, 0.2]
+splits_path: splits/splits_v1.csv

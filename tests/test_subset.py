@@ -1,0 +1,57 @@
+import pandas as pd
+
+from lookalike.data.subset import build_subset, image_path
+
+
+def articles() -> pd.DataFrame:
+    rows = []
+    aid = 0
+
+    def add(n, type_, colour="Black", appearance="Solid"):
+        nonlocal aid
+        for _ in range(n):
+            rows.append(
+                {
+                    "article_id": aid,
+                    "product_code": aid // 2,
+                    "product_type_name": type_,
+                    "colour_group_name": colour,
+                    "graphical_appearance_name": appearance,
+                }
+            )
+            aid += 1
+
+    add(10, "Dress")
+    add(4, "Scarf")  # too small
+    add(3, "Dress", colour="Unknown")  # dropped as unknown
+    add(2, "Dress", colour=None)  # dropped as missing
+    return pd.DataFrame(rows)
+
+
+def test_drops_unknown_missing_and_small_types():
+    out = build_subset(articles(), cap_per_type=100, min_per_type=5, seed=0)
+    assert set(out["product_type_name"]) == {"Dress"}
+    assert len(out) == 10
+
+
+def test_cap_per_type():
+    out = build_subset(articles(), cap_per_type=6, min_per_type=5, seed=0)
+    assert len(out) == 6
+
+
+def test_cap_is_deterministic_for_a_seed():
+    a = build_subset(articles(), cap_per_type=6, min_per_type=5, seed=7)
+    b = build_subset(articles(), cap_per_type=6, min_per_type=5, seed=7)
+    pd.testing.assert_frame_equal(a, b)
+
+
+def test_images_filter():
+    out = build_subset(
+        articles(), cap_per_type=100, min_per_type=1, seed=0, has_image=lambda a: a < 4
+    )
+    assert set(out["article_id"]) == {0, 1, 2, 3}
+
+
+def test_image_path_layout():
+    p = image_path("images", 108775015)
+    assert p.as_posix() == "images/010/0108775015.jpg"
