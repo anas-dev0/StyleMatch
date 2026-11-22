@@ -10,7 +10,12 @@ num_workers: 4 # threads that decode JPEGs in parallel
 # Each model may also set `revision: <commit hash>` to pin exact weights. Without it the latest
 # commit is used and its hash is recorded in meta.json; copy that hash here to freeze it.
 models:
-  resnet50: { hf_id: microsoft/resnet-50, kind: resnet }
-  clip: { hf_id: openai/clip-vit-base-patch16, kind: clip }
-  dinov2: { hf_id: facebook/dinov2-base, kind: dinov2 }
-  fashionclip: { hf_id: patrickjohncyh/fashion-clip, kind: clip }
+  # revision = the commit that produced the Phase 2 embeddings (read from meta.json, 2026-11-22)
+  resnet50:
+    { hf_id: microsoft/resnet-50, kind: resnet, revision: 34c2154c194f829b11125337b98c8f5f9965ff19 }
+  clip:
+    { hf_id: openai/clip-vit-base-patch16, kind: clip, revision: 57c216476eefef5ab752ec549e440a49ae4ae5f3 }
+  dinov2:
+    { hf_id: facebook/dinov2-base, kind: dinov2, revision: f9e44c814b77203eaa57a6bdbbd535f21ede1415 }
+  fashionclip:
+    { hf_id: patrickjohncyh/fashion-clip, kind: clip, revision: 7e3ba62ce16b379a1ab479346b66f192e76f51b7 }

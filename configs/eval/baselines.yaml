@@ -1,0 +1,20 @@
+# Baseline evaluation. Paths are relative to the repo root (Kaggle: /kaggle/working/StyleMatch).
+subset_path: data/processed/subset.parquet
+splits_path: splits/splits_v1.csv
+embeddings_root: artifacts/embeddings # <root>/<model>/embeddings.npy + ids.npy
+results_path: artifacts/results/baselines.csv
+
+models: [resnet50, clip, dinov2, fashionclip]
+reference_model: clip # paired differences are computed against this one
+eval_splits: [test, test_unseen]
+
+seed: 42
+n_boot: 1000
+ks: [1, 5, 10]
+ndcg_k: 10
+map_k: 10
+relevance_threshold: 2 # grade >= 2 counts as "relevant" for hit/recall/MRR/AP (D10)
+
+# MLflow is optional (uv sync --group tracking). Runs go to a local folder.
+mlflow_tracking_uri: mlruns
+mlflow_experiment: phase2_baselines
