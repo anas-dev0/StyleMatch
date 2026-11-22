@@ -3,7 +3,7 @@ name = "lookalike"
 version = "0.1.0"
 description = "Visual look-alike search for fashion items (CLIP embeddings, LoRA, Qdrant, rigorous evaluation)"
 readme = "README.md"
-requires-python = ">=3.11,<3.12"
+requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.26",
     "pandas>=2.2",
