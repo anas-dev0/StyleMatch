@@ -106,6 +106,22 @@ def check_no_leakage(splits: pd.DataFrame) -> None:
     assert not clash, f"held-out types also appear in other splits: {sorted(clash)[:5]}"
 
 
+def check_near_duplicates_together(splits: pd.DataFrame, pairs: pd.DataFrame) -> int:
+    """Raise AssertionError if a near-duplicate pair is split across two splits.
+
+    Pairs where one item was dropped are ignored (they cannot leak). Returns how many pairs
+    were actually checked, so the caller can print it.
+    """
+    split_of = splits.set_index("article_id")["split"]
+    a, b = pairs["article_id_a"], pairs["article_id_b"]
+    both = a.isin(split_of.index) & b.isin(split_of.index)
+    sa = split_of.loc[a[both]].to_numpy()
+    sb = split_of.loc[b[both]].to_numpy()
+    bad = sa != sb
+    assert not bad.any(), f"{int(bad.sum())} near-duplicate pairs sit in different splits"
+    return int(both.sum())
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Create leakage-free splits (ids only).")
     parser.add_argument("--config", required=True)
@@ -126,6 +142,9 @@ def main() -> None:
     )
     # check_no_leakage needs the type column, so run it before selecting output columns
     check_no_leakage(splits)
+    if pairs is not None:
+        n_checked = check_near_duplicates_together(splits, pairs)
+        print(f"Near-duplicate guard passed: {n_checked} pairs, all inside one split.")
     out = Path(cfg["splits_path"])
     out.parent.mkdir(parents=True, exist_ok=True)
     splits[["article_id", "product_code", "split"]].to_csv(out, index=False)

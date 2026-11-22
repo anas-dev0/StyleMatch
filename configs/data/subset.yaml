@@ -17,7 +17,7 @@ min_per_type: 30 # types with fewer items cannot be split sensibly
 # Near-duplicate check (embeddings come from frozen CLIP, Phase 2 extraction)
 embeddings_path: artifacts/embeddings/clip/embeddings.npy
 embedding_ids_path: artifacts/embeddings/clip/ids.npy
-near_dup_threshold: 0.97
+near_dup_threshold: 0.98 # swept 0.97-0.995 on real data, see DECISIONS.md D16
 near_dup_pairs_path: data/processed/near_dup_pairs.parquet
 
 # Splits (ids only, committed to the repo)
