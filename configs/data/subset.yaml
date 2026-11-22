@@ -15,8 +15,8 @@ cap_per_type: 300 # chosen from the real distribution (105,542 articles, 131 typ
 min_per_type: 30 # types with fewer items cannot be split sensibly
 
 # Near-duplicate check (embeddings come from frozen CLIP, Phase 2 extraction)
-embeddings_path: data/processed/clip_frozen_embeddings.npy
-embedding_ids_path: data/processed/clip_frozen_ids.npy
+embeddings_path: artifacts/embeddings/clip/embeddings.npy
+embedding_ids_path: artifacts/embeddings/clip/ids.npy
 near_dup_threshold: 0.97
 near_dup_pairs_path: data/processed/near_dup_pairs.parquet
 

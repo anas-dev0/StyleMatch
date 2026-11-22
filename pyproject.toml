@@ -19,6 +19,8 @@ dev = [
 ]
 # Heavy packages are kept out of the default install so CI stays fast.
 tracking = ["mlflow>=2.16"]
+# Preinstalled on Kaggle; declared here so exact versions are recorded in uv.lock.
+ml = ["torch>=2.2", "transformers>=4.44", "pillow>=10"]
 
 [build-system]
 requires = ["hatchling"]

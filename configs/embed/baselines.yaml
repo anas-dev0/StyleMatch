@@ -1,0 +1,14 @@
+# Frozen baseline encoders. Paths are for Kaggle; edit for another machine.
+subset_path: data/processed/subset.parquet
+images_dir: /kaggle/input/competitions/h-and-m-personalized-fashion-recommendations/images
+out_root: artifacts/embeddings
+
+shard_size: 2048 # items per checkpoint file (a crash loses at most one shard)
+batch_size: 64 # images per forward pass; lower it if the GPU runs out of memory
+num_workers: 4 # threads that decode JPEGs in parallel
+
+models:
+  resnet50: { hf_id: microsoft/resnet-50, kind: resnet }
+  clip: { hf_id: openai/clip-vit-base-patch16, kind: clip }
+  dinov2: { hf_id: facebook/dinov2-base, kind: dinov2 }
+  fashionclip: { hf_id: patrickjohncyh/fashion-clip, kind: clip }
