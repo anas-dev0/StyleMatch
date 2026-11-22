@@ -7,6 +7,8 @@ shard_size: 2048 # items per checkpoint file (a crash loses at most one shard)
 batch_size: 64 # images per forward pass; lower it if the GPU runs out of memory
 num_workers: 4 # threads that decode JPEGs in parallel
 
+# Each model may also set `revision: <commit hash>` to pin exact weights. Without it the latest
+# commit is used and its hash is recorded in meta.json; copy that hash here to freeze it.
 models:
   resnet50: { hf_id: microsoft/resnet-50, kind: resnet }
   clip: { hf_id: openai/clip-vit-base-patch16, kind: clip }

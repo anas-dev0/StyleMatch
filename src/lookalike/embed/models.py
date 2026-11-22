@@ -13,6 +13,29 @@ What each `kind` returns as "the embedding":
 import numpy as np
 
 
+def resolve_revision(hf_id: str, pinned: str | None = None, get_sha=None) -> str | None:
+    """Commit hash to load a model at, so a run can be traced to exact weights.
+
+    A `pinned` hash from the config wins and needs no network. Otherwise ask the Hub for the
+    current hash of the model's main branch. Returns None (with a warning) if that fails.
+    `get_sha` can be injected for tests.
+    """
+    if pinned:
+        return pinned
+    if get_sha is None:
+
+        def get_sha(model_id: str) -> str:
+            from huggingface_hub import HfApi
+
+            return HfApi().model_info(model_id).sha
+
+    try:
+        return get_sha(hf_id)
+    except Exception as exc:  # network down, model renamed, rate limit...
+        print(f"WARNING: could not resolve a commit hash for {hf_id}: {exc}")
+        return None
+
+
 class ImageEncoder:
     def __init__(self, spec: dict, device: str | None = None):
         import torch
@@ -26,9 +49,11 @@ class ImageEncoder:
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.half = self.device == "cuda"  # fp16 on GPU; T4 has no bf16
 
-        self.processor = AutoImageProcessor.from_pretrained(spec["hf_id"])
+        revision = resolve_revision(spec["hf_id"], spec.get("revision"))
+        self.processor = AutoImageProcessor.from_pretrained(spec["hf_id"], revision=revision)
         model_cls = CLIPModel if self.kind == "clip" else AutoModel
-        model = model_cls.from_pretrained(spec["hf_id"]).eval().to(self.device)
+        model = model_cls.from_pretrained(spec["hf_id"], revision=revision)
+        model = model.eval().to(self.device)
         if self.half:
             model = model.half()
         self.model = model
@@ -36,7 +61,8 @@ class ImageEncoder:
         self.meta = {
             "hf_id": spec["hf_id"],
             "kind": self.kind,
-            "commit_hash": getattr(model.config, "_commit_hash", None),
+            "commit_hash": revision,
+            "revision_pinned_in_config": bool(spec.get("revision")),
             "device": self.device,
             "fp16": self.half,
             "torch": torch.__version__,
