@@ -1,10 +1,10 @@
 # Paths are for Kaggle; copy this file and edit them for another machine.
-raw_dir: /kaggle/input/h-and-m-personalized-fashion-recommendations
-images_dir: /kaggle/input/h-and-m-personalized-fashion-recommendations/images
+raw_dir: /kaggle/input/competitions/h-and-m-personalized-fashion-recommendations
+images_dir: /kaggle/input/competitions/h-and-m-personalized-fashion-recommendations/images
 subset_path: data/processed/subset.parquet
 
 seed: 42
-cap_per_type: 1500 # TUNE after looking at the real type distribution (target ~20k items)
+cap_per_type: 300 # chosen from the real distribution (105,542 articles, 131 types); target ~20k
 min_per_type: 30 # types with fewer items cannot be split sensibly
 
 # Near-duplicate check (embeddings come from frozen CLIP, Phase 2 extraction)
