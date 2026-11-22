@@ -1,7 +1,8 @@
 """Build the working subset of the H&M catalogue.
 
-Steps: keep needed columns, clean attributes, drop items without an image, drop product
-types that are too small to split, cap each type so no type dominates.
+Steps: keep needed columns, clean attributes, drop non-fashion groups/types, drop items
+without an image, drop product types that are too small to split, cap each type so no
+type dominates.
 """
 
 import argparse
@@ -18,13 +19,24 @@ KEY_COLS = [
     "colour_group_name",
     "graphical_appearance_name",
 ]
-EXTRA_COLS = ["department_name", "garment_group_name", "detail_desc"]
+EXTRA_COLS = ["product_group_name", "department_name", "garment_group_name", "detail_desc"]
 
 
 def image_path(images_dir: str | Path, article_id: int) -> Path:
     """H&M layout: images/<first 3 digits of the 10-digit id>/<10-digit id>.jpg."""
     padded = f"{int(article_id):010d}"
     return Path(images_dir) / padded[:3] / f"{padded}.jpg"
+
+
+def _exclude(df: pd.DataFrame, column: str, values) -> pd.DataFrame:
+    """Drop rows whose `column` equals any of `values` (case-insensitive, whitespace-trimmed)."""
+    if not values:
+        return df
+    if column not in df.columns:
+        raise KeyError(f"cannot exclude on '{column}': column not found")
+    drop = {v.strip().lower() for v in values}
+    cleaned = df[column].astype("string").str.strip().str.lower()
+    return df[~cleaned.isin(drop)]
 
 
 def build_subset(
@@ -35,6 +47,8 @@ def build_subset(
     seed: int,
     has_image=None,
     drop_unknown: bool = True,
+    exclude_groups=(),
+    exclude_types=(),
 ) -> pd.DataFrame:
     """Return the cleaned, capped subset. `has_image(article_id) -> bool` filters rows."""
     cols = KEY_COLS + [c for c in EXTRA_COLS if c in articles.columns]
@@ -46,6 +60,9 @@ def build_subset(
     if drop_unknown:
         for col in KEY_COLS[2:]:
             df = df[df[col].str.lower() != "unknown"]
+
+    df = _exclude(df, "product_group_name", exclude_groups)
+    df = _exclude(df, "product_type_name", exclude_types)
 
     if has_image is not None:
         df = df[df["article_id"].map(has_image)]
@@ -73,6 +90,8 @@ def main() -> None:
         min_per_type=cfg["min_per_type"],
         seed=cfg["seed"],
         has_image=lambda a: image_path(images_dir, a).exists(),
+        exclude_groups=cfg.get("exclude_product_groups", []),
+        exclude_types=cfg.get("exclude_product_types", []),
     )
     out = Path(cfg["subset_path"])
     out.parent.mkdir(parents=True, exist_ok=True)

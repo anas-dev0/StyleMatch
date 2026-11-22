@@ -4,6 +4,13 @@ images_dir: /kaggle/input/competitions/h-and-m-personalized-fashion-recommendati
 subset_path: data/processed/subset.parquet
 
 seed: 42
+
+# Non-fashion items are excluded: a look-alike search for clothes should not return toys.
+# Groups come from product_group_name; individual types are listed when a group is mixed.
+exclude_product_groups:
+  [Unknown, Cosmetic, Items, Furniture, Garment and Shoe care, Stationery, Interior textile, Fun]
+exclude_product_types: [Soft Toys] # review the printed type list after rerunning and extend
+
 cap_per_type: 300 # chosen from the real distribution (105,542 articles, 131 types); target ~20k
 min_per_type: 30 # types with fewer items cannot be split sensibly
 
