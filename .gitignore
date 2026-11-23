@@ -1,6 +1,7 @@
 # data and outputs (never commit: dataset licence, size)
 /data/
 /artifacts/
+/app_data/
 mlruns/
 mlflow.db
 *.pt

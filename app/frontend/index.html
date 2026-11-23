@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LookAlike text search</title>
+  <style>
+    :root { --bg:#fafafa; --card:#fff; --text:#1a1a1a; --muted:#6b6b6b; --line:#e3e3e3; --accent:#2b59c3; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#16181c; --card:#1f2228; --text:#ececec; --muted:#9aa0a6; --line:#2e323a; --accent:#7aa2ff; }
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--text); }
+    main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+    h1 { font-size: 1.4rem; margin: 0 0 4px; }
+    p.sub { margin: 0 0 20px; color: var(--muted); }
+    form { display:flex; gap:8px; }
+    input { flex:1; padding:12px; font-size:1rem; border:1px solid var(--line); border-radius:8px;
+            background:var(--card); color:var(--text); }
+    button { padding:12px 20px; font-size:1rem; border:0; border-radius:8px; background:var(--accent);
+             color:#fff; cursor:pointer; }
+    button:disabled { opacity:.6; cursor:wait; }
+    #status { margin:16px 0; color:var(--muted); min-height:1.2em; }
+    #grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:14px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+    .card img { width:100%; aspect-ratio: 2/3; object-fit:cover; display:block; background:var(--line); }
+    .card div { padding:8px 10px; font-size:.85rem; }
+    .name { font-weight:600; }
+    .meta { color:var(--muted); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>LookAlike text search</h1>
+  <p class="sub">Describe a clothing item; FashionCLIP finds the closest catalogue photos.</p>
+  <form id="form">
+    <input id="q" placeholder="e.g. black floral summer dress" autocomplete="off" autofocus>
+    <button id="go" type="submit">Search</button>
+  </form>
+  <div id="status"></div>
+  <div id="grid"></div>
+</main>
+<script>
+  const form = document.getElementById("form");
+  const input = document.getElementById("q");
+  const button = document.getElementById("go");
+  const statusEl = document.getElementById("status");
+  const grid = document.getElementById("grid");
+
+  function card(r) {
+    const el = document.createElement("div");
+    el.className = "card";
+    const img = document.createElement("img");
+    img.src = r.image_url;           // the browser fetches the picture from this URL
+    img.alt = r.name;
+    img.loading = "lazy";
+    const info = document.createElement("div");
+    const name = document.createElement("div");
+    name.className = "name";
+    name.textContent = r.name;       // textContent, never innerHTML: item text is not trusted
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = `${r.product_type} · ${r.colour} · ${r.score.toFixed(3)}`;
+    info.append(name, meta);
+    el.append(img, info);
+    return el;
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const query = input.value.trim();
+    if (!query) return;
+    button.disabled = true;
+    statusEl.textContent = "Searching...";
+    try {
+      const res = await fetch("/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+      if (!res.ok) throw new Error(`server answered ${res.status}`);
+      const data = await res.json();
+      grid.replaceChildren(...data.results.map(card));
+      statusEl.textContent = `${data.results.length} results in ${data.took_ms} ms`;
+    } catch (err) {
+      statusEl.textContent = `Search failed: ${err.message}`;
+    } finally {
+      button.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

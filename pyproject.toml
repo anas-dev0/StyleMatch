@@ -21,6 +21,8 @@ dev = [
 tracking = ["mlflow>=2.16"]
 # Preinstalled on Kaggle; declared here so exact versions are recorded in uv.lock.
 ml = ["torch>=2.2", "transformers>=4.44", "pillow>=10"]
+# Text-search app. torch/transformers are NOT here: the app runs in an environment that already has them.
+app = ["fastapi>=0.110", "uvicorn>=0.29", "httpx>=0.27", "pillow>=10"]
 
 [build-system]
 requires = ["hatchling"]
@@ -38,3 +40,4 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."] # lets tests import the top-level `app` package

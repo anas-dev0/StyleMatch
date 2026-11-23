@@ -1,0 +1,24 @@
+# Settings for the text-search app (see app/). Paths are relative to the repo root.
+
+# Folder with embeddings.npy, ids.npy, metadata.csv and thumbs/ (made by app.tools.export_assets).
+# Override with the LOOKALIKE_DATA_DIR environment variable, e.g. a folder outside OneDrive.
+data_dir: app_data
+
+model:
+  hf_id: patrickjohncyh/fashion-clip
+  # Must be the commit that produced the image embeddings (configs/embed/baselines.yaml),
+  # otherwise the text and image vectors live in different spaces.
+  revision: 7e3ba62ce16b379a1ab479346b66f192e76f51b7
+
+default_k: 12 # results per search when the request does not say
+max_k: 50
+
+# Used only by `python -m app.tools.export_assets` (run on Kaggle, where the images are).
+export:
+  raw_dir: /kaggle/input/competitions/h-and-m-personalized-fashion-recommendations
+  images_dir: /kaggle/input/competitions/h-and-m-personalized-fashion-recommendations/images
+  subset_path: data/processed/subset.parquet
+  embeddings_dir: artifacts/embeddings/fashionclip
+  thumb_max_side: 256 # longest side in pixels
+  jpeg_quality: 80
+  num_workers: 4
