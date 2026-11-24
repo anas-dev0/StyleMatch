@@ -1,0 +1,19 @@
+# Text embeddings (DECISIONS.md D20). Paths are for Kaggle; edit for another machine.
+subset_path: data/processed/subset.parquet
+out_root: artifacts/embeddings # same root as image embeddings: <root>/<name>/embeddings.npy
+
+shard_size: 2048
+batch_size: 256 # captions per forward pass (text is much cheaper than images)
+
+# Same model and pinned revision as the `fashionclip` image encoder in baselines.yaml, so image
+# and text vectors share one embedding space.
+models:
+  fashionclip_text_desc:
+    hf_id: patrickjohncyh/fashion-clip
+    revision: 7e3ba62ce16b379a1ab479346b66f192e76f51b7
+    fields: [detail_desc]
+  # Circular with the relevance proxy (contains its three attributes): reference only.
+  fashionclip_text_attr:
+    hf_id: patrickjohncyh/fashion-clip
+    revision: 7e3ba62ce16b379a1ab479346b66f192e76f51b7
+    fields: [product_type_name, colour_group_name, graphical_appearance_name, detail_desc]
