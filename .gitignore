@@ -21,5 +21,3 @@ __pycache__/
 *.egg-info/
 dist/
 .ipynb_checkpoints/
-DECISIONS.md
-LEARNING_LOG.md
