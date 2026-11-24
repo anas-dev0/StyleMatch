@@ -1,0 +1,44 @@
+# Phase 3: hybrid vs single-signal search (DECISIONS.md D20-D23). Paths relative to repo root.
+subset_path: data/processed/subset.parquet
+splits_path: splits/splits_v1.csv
+embeddings_root: artifacts/embeddings # <root>/<model>/embeddings.npy + ids.npy
+results_path: artifacts/results/hybrid_phase3.csv
+paired_path: artifacts/results/hybrid_phase3_paired.csv
+
+eval_splits: [test, test_unseen]
+
+candidates: 100 # each signal's list length fed to RRF (D22)
+rrf_k: 60 # 1-based ranks (Cormack et al. 2009)
+bm25_k1: 1.2
+bm25_b: 0.75
+
+signals:
+  image: { kind: dense, model: fashionclip } # Phase 2 embeddings, pinned revision
+  text: { kind: dense, model: fashionclip_text_desc } # configs/embed/text.yaml
+  bm25: { kind: bm25, fields: [detail_desc] }
+  # Built from the attributes the proxy grades on: reference only, not a competitor.
+  attr_bm25:
+    kind: bm25
+    fields: [product_type_name, colour_group_name, graphical_appearance_name]
+    circular: true
+
+systems:
+  image: [image]
+  text: [text]
+  bm25: [bm25]
+  image+text: [image, text]
+  image+bm25: [image, bm25]
+  image+text+bm25: [image, text, bm25]
+  image+attr_bm25: [image, attr_bm25] # circular reference
+
+reference_system: image # paired differences are computed against this one
+
+seed: 42
+n_boot: 1000
+ks: [1, 5, 10]
+ndcg_k: 10
+map_k: 10
+relevance_threshold: 2 # D10
+
+mlflow_tracking_uri: sqlite:///mlflow.db
+mlflow_experiment: phase3_hybrid
