@@ -19,6 +19,9 @@
             background:var(--card); color:var(--text); }
     button { padding:12px 20px; font-size:1rem; border:0; border-radius:8px; background:var(--accent);
              color:#fff; cursor:pointer; }
+    .filters { display:flex; gap:8px; margin-top:8px; }
+    select { padding:8px; border:1px solid var(--line); border-radius:8px; background:var(--card);
+             color:var(--text); max-width:50%; }
     button:disabled { opacity:.6; cursor:wait; }
     #status { margin:16px 0; color:var(--muted); min-height:1.2em; }
     #grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:14px; }
@@ -37,6 +40,10 @@
     <input id="q" placeholder="e.g. black floral summer dress" autocomplete="off" autofocus>
     <button id="go" type="submit">Search</button>
   </form>
+  <div class="filters">
+    <select id="type"><option value="">All types</option></select>
+    <select id="colour"><option value="">All colours</option></select>
+  </div>
   <div id="status"></div>
   <div id="grid"></div>
 </main>
@@ -46,6 +53,21 @@
   const button = document.getElementById("go");
   const statusEl = document.getElementById("status");
   const grid = document.getElementById("grid");
+  const typeSel = document.getElementById("type");
+  const colourSel = document.getElementById("colour");
+
+  function fill(select, values) {
+    for (const v of values) {
+      const o = document.createElement("option");
+      o.value = v;
+      o.textContent = v;
+      select.append(o);
+    }
+  }
+  fetch("/facets").then((r) => r.json()).then((f) => {
+    fill(typeSel, f.product_type);
+    fill(colourSel, f.colour);
+  }).catch(() => {});  // filters are optional: search still works without them
 
   function card(r) {
     const el = document.createElement("div");
@@ -76,12 +98,18 @@
       const res = await fetch("/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({
+          query,
+          product_type: typeSel.value || null,
+          colour: colourSel.value || null,
+        }),
       });
       if (!res.ok) throw new Error(`server answered ${res.status}`);
       const data = await res.json();
       grid.replaceChildren(...data.results.map(card));
-      statusEl.textContent = `${data.results.length} results in ${data.took_ms} ms`;
+      statusEl.textContent = data.results.length
+        ? `${data.results.length} results in ${data.took_ms} ms`
+        : "No matching items. Try describing a piece of clothing, a shoe or an accessory.";
     } catch (err) {
       statusEl.textContent = `Search failed: ${err.message}`;
     } finally {

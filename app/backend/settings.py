@@ -15,4 +15,6 @@ def load_settings(path: str | None = None, env=None) -> dict:
     with open(path, encoding="utf-8") as f:
         settings = yaml.safe_load(f)
     settings["data_dir"] = Path(env.get("LOOKALIKE_DATA_DIR") or settings["data_dir"])
+    qdrant = settings.setdefault("qdrant", {})
+    qdrant["url"] = env.get("LOOKALIKE_QDRANT_URL") or qdrant.get("url")
     return settings

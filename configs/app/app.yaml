@@ -10,8 +10,18 @@ model:
   # otherwise the text and image vectors live in different spaces.
   revision: 7e3ba62ce16b379a1ab479346b66f192e76f51b7
 
+# The vector database. `url: null` = embedded storage in <data_dir>/qdrant (no server needed).
+# For a Docker server set url (or the LOOKALIKE_QDRANT_URL env variable) to http://localhost:6333
+qdrant:
+  url: null
+  collection: fashion_items
+
 default_k: 12 # results per search when the request does not say
 max_k: 50
+
+# Results with a cosine score below this are dropped (a query unrelated to fashion then returns
+# nothing). Chosen by looking at real scores, see DECISIONS.md D19. null = keep everything.
+min_score: 0.275
 
 # Used only by `python -m app.tools.export_assets` (run on Kaggle, where the images are).
 export:

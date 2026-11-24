@@ -1,9 +1,84 @@
 # LookAlike
 
-Visual look-alike search for fashion items (CLIP-family embeddings, LoRA fine-tuning, Qdrant
-hybrid search, rigorous evaluation) on the H&M Personalized Fashion Recommendations images.
-Work in progress: see `PLAN.md`. Data licence: non-commercial / academic only, so no images,
-embeddings or weights are published here.
+Fashion search on the [H&M Personalized Fashion Recommendations](https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations)
+catalogue, built around CLIP-family image and text embeddings. The repository has two parts:
+
+| Part | What it is | Status |
+|---|---|---|
+| **Text-search app** (`app/`) | Type a description such as "black leather boots" and get the closest catalogue photos. FashionCLIP text encoder, Qdrant vector database, FastAPI backend, plain HTML page. | Working locally |
+| **Visual look-alike research** (`src/lookalike/`) | Image-to-image look-alike search with frozen baselines, a leakage-safe evaluation harness, and (planned) LoRA fine-tuning and hybrid search. See `PLAN.md`. | Phases 0-2 done |
+
+Data licence: the H&M data is for non-commercial / academic use. No images, thumbnails,
+embeddings or model weights are published in this repository, and the app is meant to run on
+your own machine only. See `DECISIONS.md` D6 if you have the local copy.
+
+## Text-search app
+
+```
+ browser  --POST /search {"query": "red floral dress"}-->  FastAPI (app/backend/api.py)
+                                                              |
+                          FashionCLIP text tower  <-----------+  turns the text into a 512-number vector
+                                                              |
+                          Qdrant (cosine similarity)  <-------+  nearest image vectors, optional type/colour filter
+                                                              |
+ browser  <--JSON: rank, score, name, type, colour, image_url--+
+ browser  --GET /thumbs/0108775015.jpg-->  FastAPI static files (256 px thumbnails)
+```
+
+CLIP-style models put text and images in the same vector space, so the vector of a sentence lands
+near the vectors of photos that match it. The photos were embedded once, offline, on Kaggle; at
+query time only the (small) text tower runs. Results below `min_score` (in `configs/app/app.yaml`)
+are dropped, so an unrelated query such as "laptop" returns nothing.
+
+### Run it
+
+1. **Prepare the data once, on Kaggle** (the images live there): run
+   `python -m app.tools.export_assets --config configs/app/app.yaml --out /kaggle/working/app_data`,
+   zip the result, download it and extract it to a folder outside OneDrive, for example
+   `C:\lookalike_data\app_data`. It contains the FashionCLIP vectors, `metadata.csv` and `thumbs/`.
+2. **Load the vectors into Qdrant** (embedded mode, no Docker needed):
+   `python -m app.tools.ingest` with `LOOKALIKE_DATA_DIR` pointing at that folder.
+3. **Start the app**, in an environment that has PyTorch, transformers and the `app` dependency group:
+   ```
+   python -m app --data-dir C:\lookalike_data\app_data --hf-home C:\lookalike_data\hf_cache
+   ```
+   Then open http://127.0.0.1:8000. Interactive API docs are at `/docs`.
+
+More detail (Docker Qdrant server, options): `app/README.md`.
+
+### Honest limits
+
+- Text-search quality has **not** been evaluated with a labelled query set, so this README
+  reports no accuracy number for it. It has only been tried by hand.
+- `min_score` is a hand-chosen demo setting: fashion and non-fashion query scores overlap
+  (`DECISIONS.md` D19).
+- Embedded Qdrant allows one process per storage folder and is meant for development.
+  The Docker server mode is implemented but has not been run end to end.
+- Only 18,123 catalogue items (the project subset) are searchable, not the full 105,542 articles.
+
+## Repository layout
+
+```
+app/                text-search app (backend/, frontend/, tools/ for data export and ingest)
+src/lookalike/      research code: data/ (subset, dedupe, splits, relevance), embed/, eval/
+configs/            YAML settings for every script (no hard-coded paths)
+tests/              pytest tests (metrics are checked on small hand-computed examples)
+splits/             product-level train/val/test splits (ids only)
+results/            baseline results CSV
+PLAN.md             8-phase research plan
+PROGRESS.md         what has been done so far, step by step
+```
+
+## Development
+
+```
+uv sync --locked --group app        # project environment
+uv run ruff check . && uv run ruff format --check .
+uv run pytest
+```
+
+CI (GitHub Actions) runs ruff and pytest. Splits are made by `product_code`, never by
+`article_id`, and a test asserts that no product appears in two splits.
 
 ## Phase 2: frozen baselines
 
