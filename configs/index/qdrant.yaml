@@ -1,0 +1,31 @@
+# Qdrant collection and HNSW benchmark (DECISIONS.md D21, D24). Paths relative to repo root.
+subset_path: data/processed/subset.parquet
+embeddings_root: artifacts/embeddings
+
+qdrant_url: http://localhost:6333 # null = in-memory local mode (no HNSW: fine for demos only)
+collection: lookalike_v1
+
+# named vector -> embedding folder under embeddings_root
+dense_vectors:
+  image: fashionclip
+  text: fashionclip_text_desc
+bm25_fields: [detail_desc]
+bm25_k1: 1.2
+bm25_b: 0.75
+
+hnsw:
+  m: 16
+  ef_construct: 100
+  # In KB. Lowered so a ~20k-vector collection is really HNSW-indexed and searched (D24).
+  indexing_threshold: 1000
+  full_scan_threshold: 10
+
+hnsw_benchmark:
+  collection: hnsw_bench
+  n_queries: 1000
+  k: 10
+  efs: [8, 16, 32, 64, 128, 256]
+  results_path: artifacts/results/hnsw_phase3.csv
+
+seed: 42
+n_boot: 1000
